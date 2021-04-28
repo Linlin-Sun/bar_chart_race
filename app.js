@@ -27,7 +27,6 @@ async function plotChart(data) {
         .classed("container", true)
 
     const update = (year) => {
-        console.log("update: year=", year);
         const presentData = processEachData(data.get(year));
         const widthScale = d3.scaleLinear()
             .domain([0, d3.max(Object.values(presentData), d => d.value)])
@@ -40,6 +39,8 @@ async function plotChart(data) {
             .data(presentData)
             .enter()
             .append("text")
+
+
 
         container
             .selectAll("text")
@@ -76,6 +77,18 @@ async function plotChart(data) {
             .duration(ticker / 1.2)
             .ease(d3.easeLinear)
             .call(d3.axisTop(widthScale));
+        const yearText = svg.append("g")
+            .attr("transform", `translate(${chartWidth}, 0)`);
+        yearText
+            .append("text")           
+            .attr("class", "Linlin")
+            .text(year.toString())
+            .transition()
+            .delay(500)
+            // .attr("x", chartWidth - fontSize - 50)
+            .attr("x", 80)
+            .attr("length", 300)
+            .attr("y", 400);
 
     }
     for (const year of yearList) {
