@@ -17,11 +17,12 @@ d3.json('finaldata.json').then(data => {
 var svg, svgWidth, svgHeight;
 
 var chartMargin = {
-    top: 60,
+    top: 30,
     left: 10,
     right: 100,
     bottom: 10
 };
+const TRANSITION_TIME = 500;
 svg = d3.select("#chart").append("svg").attr("style", "width: 80vw;height: 80vh");
 svgWidth = svg.node().clientWidth;
 svgHeight = svg.node().clientHeight;
@@ -36,7 +37,8 @@ async function plotChart(data) {
     var chartWidth, chartHeight;
     chartWidth = svgWidth - chartMargin.left - chartMargin.right;
     chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
-    const yearList = Object.keys(data);
+    // var yearList = Object.keys(data).slice(0, 1);
+    var yearList = Object.keys(data);
     console.log(yearList);
 
     const fontSize = 16;
@@ -50,12 +52,12 @@ async function plotChart(data) {
         
         cleanupSVG();
         const presentData = processEachData(data[year]);
+        console.log("presentData=", presentData);
         const widthScale = d3.scaleLinear()
             .domain([0, d3.max(Object.values(presentData), d => d.value)])
             .range([0, chartWidth - fontSize - 50]);
-
-        const sortedRange = [...presentData].sort((a, b) => b.value - a.value);
-
+        // const sortedRange = [...presentData].sort((a, b) => b.value - a.value);
+        const sortedRange = presentData.sort((a, b) => b.value - a.value);
         container
             .selectAll("text")
             .data(presentData)
@@ -66,7 +68,7 @@ async function plotChart(data) {
             .selectAll("text")
             .text(d => d.key + " " + d.value)
             .transition()
-            .delay(500)
+            .delay(TRANSITION_TIME)
             .attr("x", d => widthScale(d.value) + fontSize)
             .attr("length", 100)
             .attr("y", (d, i) => sortedRange.findIndex(e => e.key === d.key) * (rectProperties.height + rectProperties.padding) + fontSize);
@@ -81,10 +83,11 @@ async function plotChart(data) {
             .selectAll("rect")
             .attr("x", 10)
             .transition()
-            .delay(500)
+            .delay(TRANSITION_TIME)
             .attr("y", (d, i) => sortedRange.findIndex(e => e.key === d.key) * (rectProperties.height + rectProperties.padding))
             .attr("width", d => d.value <= 0 ? 0 : widthScale(d.value))
-            .attr("height", 20);
+            .attr("height", 20)
+            .attr("fill", "#ad10b5");
 
         const ticker = 500;
         const axisTop = svg
@@ -104,7 +107,7 @@ async function plotChart(data) {
             .append("text")
             .text(year.toString())
             .transition()
-            .delay(500)
+            .delay(TRANSITION_TIME)
             // .attr("x", chartWidth - fontSize - 50)
             .attr("x", 20)
             .attr("length", 300)
@@ -113,11 +116,9 @@ async function plotChart(data) {
     }
     for (const year of yearList) {
         update(year)
-        await new Promise(done => setTimeout(() => done(), 500));
+        await new Promise(done => setTimeout(() => done(), TRANSITION_TIME));
     }
 }
-
-
 
 function processEachData(data) {
     // console.log("processEachData", data);
