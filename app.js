@@ -1,46 +1,66 @@
 d3.json('finaldata.json').then(data => {
-    var groupedData = groupData(data, "Year", "CountryofLaunch");
+    // var groupedData = groupData(data, "Year", "CountryofLaunch");
+    // console.log("main groupedData=", groupedData);
+    // var countedGroupedData = countGroupedData(groupedData);
+    // console.log("main countedGroupedData=", countedGroupedData);
+    var groupedData = groupBy(data, "Year");
     console.log("main groupedData=", groupedData);
-    var countedGroupedData = countGroupedData(groupedData);
+    var countedGroupedData = {};
+    Object.entries(groupedData).forEach(([key, value]) => {
+        var count_by_country = countBy(value, "CountryofLaunch");
+        countedGroupedData[key] = count_by_country;
+    });
     console.log("main countedGroupedData=", countedGroupedData);
     plotChart(countedGroupedData);
 });
+
+var svg, svgWidth, svgHeight;
+
+var chartMargin = {
+    top: 60,
+    left: 10,
+    right: 100,
+    bottom: 10
+};
+svg = d3.select("#chart").append("svg").attr("style", "width: 80vw;height: 80vh");
+svgWidth = svg.node().clientWidth;
+svgHeight = svg.node().clientHeight;
+
+function cleanupSVG() {
+    d3.select("#topAxis").remove();
+    // d3.select("#currentyear").remove();
+    
+}
+
 async function plotChart(data) {
-    const svg = d3.select("#chart")
-    const svgWidth = svg.node().clientWidth;
-    const svgHeight = svg.node().clientHeight;
-    var chartMargin = {
-        top: 60,
-        left: 10,
-        right: 100,
-        bottom: 10
-    };
     var chartWidth, chartHeight;
     chartWidth = svgWidth - chartMargin.left - chartMargin.right;
     chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
-    const yearList = Array.from(data.keys())
+    const yearList = Object.keys(data);
+    console.log(yearList);
 
     const fontSize = 16;
-    const rectProperties = { height: 20, padding: 10 }
+    const rectProperties = { height: 20, padding: 10 };
     const container = svg.append("g")
         .attr("transform", `translate(0, ${chartMargin.top})`)
-        .classed("container", true)
+        .classed("container", true);
 
     const update = (year) => {
-        const presentData = processEachData(data.get(year));
+        console.log(year);
+        
+        cleanupSVG();
+        const presentData = processEachData(data[year]);
         const widthScale = d3.scaleLinear()
             .domain([0, d3.max(Object.values(presentData), d => d.value)])
-            .range([0, chartWidth - fontSize - 50])
+            .range([0, chartWidth - fontSize - 50]);
 
-        const sortedRange = [...presentData].sort((a, b) => b.value - a.value)
+        const sortedRange = [...presentData].sort((a, b) => b.value - a.value);
 
         container
             .selectAll("text")
             .data(presentData)
             .enter()
-            .append("text")
-
-
+            .append("text");
 
         container
             .selectAll("text")
@@ -49,13 +69,13 @@ async function plotChart(data) {
             .delay(500)
             .attr("x", d => widthScale(d.value) + fontSize)
             .attr("length", 100)
-            .attr("y", (d, i) => sortedRange.findIndex(e => e.key === d.key) * (rectProperties.height + rectProperties.padding) + fontSize)
+            .attr("y", (d, i) => sortedRange.findIndex(e => e.key === d.key) * (rectProperties.height + rectProperties.padding) + fontSize);
 
         container
             .selectAll("rect")
             .data(presentData)
             .enter()
-            .append("rect")
+            .append("rect");
 
         container
             .selectAll("rect")
@@ -69,26 +89,26 @@ async function plotChart(data) {
         const ticker = 500;
         const axisTop = svg
             .append('g')
+            .attr("id", "topAxis")
             .classed('axis', true)
             .style("transform", "translate(10px, 20px)")
-            .call(d3.axisTop(widthScale))
+            .call(d3.axisTop(widthScale));
         axisTop
             .transition()
             .duration(ticker / 1.2)
             .ease(d3.easeLinear)
             .call(d3.axisTop(widthScale));
-        const yearText = svg.append("g")
+        const yearText = svg.append("g").attr("id", "currentyear") 
             .attr("transform", `translate(${chartWidth}, 0)`);
         yearText
-            .append("text")           
-            .attr("class", "Linlin")
+            .append("text")
             .text(year.toString())
             .transition()
             .delay(500)
             // .attr("x", chartWidth - fontSize - 50)
-            .attr("x", 80)
+            .attr("x", 20)
             .attr("length", 300)
-            .attr("y", 400);
+            .attr("y", 20);
 
     }
     for (const year of yearList) {
@@ -97,23 +117,7 @@ async function plotChart(data) {
     }
 }
 
-function groupData(data, g1, g2) {
-    return d3.group(data, d => d[g1], c => c[g2]);
-}
 
-function countGroupedData(data) {
-    console.log("countGroupedData data=", data);
-    var results = new Map();
-    data.forEach((value, key) => {
-        // console.log(key, value);
-        results.set(key, {});
-        value.forEach((value_inner, key_inner) => {
-            // console.log(key_inner, value_inner);
-            results.get(key)[key_inner] = value_inner.length;
-        });
-    });
-    return results;
-}
 
 function processEachData(data) {
     // console.log("processEachData", data);
