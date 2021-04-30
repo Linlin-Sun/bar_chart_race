@@ -34,12 +34,12 @@ let caption = svg.append('text')
 .style('text-anchor', 'end')
 .html('Source: Interbrand');
 
-let year = 2000;
+var year, max_year, year_list;
 
 d3.csv('brand_values.csv').then(function(data) {
 //if (error) throw error;
 
-console.log(data);
+// console.log(data);
 
  data.forEach(d => {
   d.value = +d.value,
@@ -48,8 +48,14 @@ console.log(data);
   d.year = +d.year,
   d.colour = d3.hsl(Math.random()*360,0.75,0.75)
 });
-
 console.log(data);
+year_list = data.map(d => d.year);
+
+year = Math.min(...year_list);
+max_year = Math.max(...year_list);
+console.log("year_list=", year_list);
+console.log("year=", year);
+console.log("max_year=", max_year);
 
 let yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
 .sort((a,b) => b.value - a.value)
@@ -242,7 +248,7 @@ valueLabels
 
 yearText.html(~~year);
 
-if(year == 2018) ticker.stop();
+if(year == max_year) ticker.stop();
 year = d3.format('.1f')((+year) + 0.1);
 },tickDuration);
 
